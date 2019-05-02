@@ -3,14 +3,6 @@ var redis = require("redis");
 
 var app = express();
 
-function createClient(host) {
-  return redis.createClient({
-    host: host,
-    port: 6379,
-    scheme: "tcp"
-  });
-}
-
 app.use(express.static("static"));
 
 app.get("/api/instance", (request, response) => {
@@ -24,17 +16,35 @@ app.get("/api", (request, response) => {
 
   response.append("Content-Type", "application/json");
 
-  if (cmd === "set") {
-    var client = createClient("redis-master");
-    client.set(key, value);
-    response.status(200).send({ Updated: true });
-  } else {
-    var client = createClient("redis-slave");
-    client.get(key, function(err, reply) {
-      if (err) response.status(500).send({ error: "Error" });
-      else response.status(200).send(reply);
-    });
+  function handleResponse(err, reply) {
+    if (err) response.status(500).send({ error: "Error" });
+    else response.status(200).send({ reply: reply });
   }
+
+  var config =
+    cmd === "set"
+      ? {
+          host: "redis-master",
+          method: "lpush",
+          args: [key, value, handleResponse]
+        }
+      : {
+          host: "redis-slave",
+          method: "lrange",
+          args: [key, 0, 100, handleResponse]
+        };
+
+  var client = redis.createClient({
+    host: config.host,
+    port: 6379,
+    scheme: "tcp"
+  });
+
+  client.on("error", function(err) {
+    response.status(500).send({ error: "Error with connection" });
+  });
+
+  client[config.method](...config.args);
 });
 
 function onReady() {

@@ -20,7 +20,8 @@ spec:
     spec:
       containers:
         - name: slave
-          image: gcr.io/google_samples/gb-redisslave:v1
+          image: redis-slave
+          imagePullPolicy: IfNotPresent
           resources:
             requests:
               cpu: 100m

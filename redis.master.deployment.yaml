@@ -19,8 +19,8 @@ spec:
         tier: backend
     spec:
       containers:
-        - name: master
-          image: k8s.gcr.io/redis:e2e
+        - name: redis-master
+          image: redis
           resources:
             requests:
               cpu: 100m

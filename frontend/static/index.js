@@ -18,6 +18,9 @@ function buildList(items) {
 
 function mountList(lis) {
   var list = document.getElementById("messages");
+  while (list.firstChild) {
+    list.removeChild(list.firstChild);
+  }
   lis.forEach(li => {
     list.appendChild(li);
   });
@@ -25,6 +28,11 @@ function mountList(lis) {
 
 function displayList() {
   fetchAll()
+    .then(response => {
+      debugger;
+      if (!response || !response.reply) return [];
+      return response.reply;
+    })
     .then(buildList)
     .then(mountList);
 }
@@ -33,11 +41,11 @@ function displayList() {
   var input = document.getElementById("value");
   var button = document.getElementById("submit");
 
-  //displayList();
+  displayList();
 
   button.addEventListener("click", function(event) {
-    var value = input.value;
-    add(value);
-    displayList();
+    add(input.value)
+      .then(displayList)
+      .catch(console.log);
   });
 })();

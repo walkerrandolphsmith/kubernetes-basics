@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+function bootstrap() {
+  minikube start
+  eval $(minikube docker-env)
+}
+
 function start() {
   kubectl apply -f redis.master.deployment.yaml
   kubectl apply -f redis.master.service.yaml
@@ -34,9 +39,17 @@ function buildFrontEndImage() {
    docker build -f ./frontend/Dockerfile ./frontend --tag frontend
 }
 
+function buildSlaveImage() {
+  docker build -f ./redis-slave/Dockerfile ./redis-slave --tag redis-slave
+}
+
+
 command=$1
 
 case $command in
+    bootstrap)
+      bootstrap
+      ;;
     start)
         start
         ;;
@@ -51,6 +64,7 @@ case $command in
         ;;
     build)
         buildFrontEndImage
+        buildSlaveImage
         ;;
     *)
         echo "Option not recognized."
